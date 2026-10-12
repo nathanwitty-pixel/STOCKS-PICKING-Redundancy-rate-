@@ -48,7 +48,7 @@ Colours: green < 50 %, amber 50–80 %, red ≥ 80 %.
 | Units sold per product per day, per market | Odoo POS: `self_made_combos._bag_sales_daily_sql` / `BAG_SALES_DAILY_SINZA_SQL` / `_UGANDA_` (combo wrappers `+`, delivery, customisation, straps and gift bags are left out, as on Push Planner). **Kenya = the shop tills only**: the Website, Jumia and Staff POS tills are left out (`KENYA_NON_SHOP_TILLS`, plus any till named like "website"). |
 | Live stock per product, per market | `lib/stock.odoo_stock_by_shop_code(codes)`, summed over the shops: shop stock only. **Kenya = all 18 Kenya shops** (lib/stock's 16 shop codes + `EXTRA_KENYA_SHOPS` Machakos, Nyeri); never the Website (WEB), CBD, Validation (VLD) or any other warehouse. Sinza = DAR, Uganda = UG. The Stock rate's stock moves use the same shops. |
 | Bag type | `self_made_combos.bag_classifier()` |
-| Colour | `lib/colours.family()`: shades fold into families (Chocolate / Spice / Antelope → Brown, Nude → Beige, CN / TT / 018 → base colour) |
+| Colour | **as Odoo names it** (12 Oct 2026): the product name after its bag, e.g. CODE 3 ANTELOPE BROWN → *Antelope Brown*, PIONEER SPICE → *Spice*, … BLACK/CRACKED → *Black/Cracked* (`raw_colour`). Shades are no longer folded, so Spice, Cracked, Choco, Nude… each have their own row. The colour dot uses the nearest family (`lib/colours.family`: Spice → brown). `RAW_COLOURS = False` in `colour_comparison.py` goes back to the families (Spice / Antelope → Brown, Nude → Beige, CN / TT / 018 → base colour). |
 | Category | `bag_tiers.csv`, else the bag's most common `bag_names.csv` category, else OTHER |
 
 **Left out:** gift bags, and `[REJECT]` products (the dashboard's Reject Sale page covers them).

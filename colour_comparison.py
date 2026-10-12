@@ -96,14 +96,49 @@ def fallback_bag(name):
     return " ".join(words)
 
 
-def make_resolver(infer, names_cat, tiers):
-    """resolve(product name) -> (category, bag, colour family) or None when it isn't a bag.
+# Colours as Odoo names them ("Antelope Brown", "Spice", "Cracked Black"), not folded into families. Set False to go
+# back to the families of lib/colours (Spice / Antelope → Brown, Nude → Beige …); the page's colour dots use the family either way.
+RAW_COLOURS = True
+
+
+def _title(s):
+    """ANTELOPE BROWN -> Antelope Brown; short codes / numbers stay as they are (CN, TT, 018); "(MULBERRY)" -> "(Mulberry)"."""
+    out = []
+    for w in s.split():
+        if any(ch.isdigit() for ch in w) or len(w.strip("()[]")) <= 2:
+            out.append(w)
+        else:                                                # each part of BLACK/CRACKED → Black/Cracked
+            parts = []
+            for part in w.split("/"):
+                i = next((k for k, ch in enumerate(part) if ch.isalpha()), 0)
+                parts.append(part[:i] + part[i:i + 1].upper() + part[i + 1:].lower())
+            out.append("/".join(parts))
+    return " ".join(out)
+
+
+def raw_colour(name, bag):
+    """The colour as Odoo names it: the product name after its bag ("CODE 3 ANTELOPE BROWN" -> "Antelope Brown").
+    A name that spells the bag another way (a promo alias: "CAIRO BACKPACK BLACK" for CAIRO BP) drops as many words
+    as the bag has. No colour left -> the family, else "Other"."""
+    n = _norm(name)
+    if n == bag:
+        rest = ""
+    elif n.startswith(bag + " "):
+        rest = n[len(bag) + 1:]
+    else:
+        rest = " ".join(n.split()[len(bag.split()):])
+    return _title(rest) or colours.family(n) or "Other"
+
+
+def make_resolver(infer, names_cat, tiers, raw=None):
+    """resolve(product name) -> (category, bag, colour) or None when it isn't a bag.
 
     Bag = the shared catalogue resolver (`infer`, as Push Planner / Bags on offer use); a product it
     can't place but bag_names.csv lists (a new bag), or whose name minus the colour words is such a bag
     (a new colour of it), falls back to that name. Gift bags and [REJECT] products are left out.
-    Colour = lib/colours.family (shades fold into families, as on every page but New Products).
+    Colour = as Odoo names it (raw_colour) when raw (default RAW_COLOURS), else lib/colours.family (shades fold into families).
     Category = bag_tiers.csv, else the bag's most common bag_names.csv category, else OTHER."""
+    raw = RAW_COLOURS if raw is None else raw
     by_bag = defaultdict(Counter)
     for n, cat in names_cat.items():
         b = infer(n) or fallback_bag(n)
@@ -119,7 +154,7 @@ def make_resolver(infer, names_cat, tiers):
         if not bag:
             return None
         cat = tiers.get(bag) or (by_bag[bag].most_common(1)[0][0] if by_bag.get(bag) else "") or "OTHER"
-        col = colours.family(n) or "Other"
+        col = raw_colour(n, bag) if raw else (colours.family(n) or "Other")
         return cat, bag, col
     return resolve
 
@@ -204,7 +239,7 @@ def rollup(sold, stock, resolve, daily=None):
             for p in PERIODS:
                 miss[p] += int(s.get(p) or 0)
             continue
-        r = agg.setdefault(key, {"cat": key[0], "bag": key[1], "col": key[2], "stock": 0,
+        r = agg.setdefault(key, {"cat": key[0], "bag": key[1], "col": key[2], "fam": colours.family(key[2]) or "", "stock": 0,
                                  "d7": 0, "d28": 0, "mtd": 0, "names": []})
         r["stock"] += q
         for p in PERIODS:

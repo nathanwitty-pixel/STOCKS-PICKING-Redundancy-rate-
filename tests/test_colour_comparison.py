@@ -19,8 +19,9 @@ def _infer(name):
     return None
 
 
-RESOLVE = cc.make_resolver(_infer, {"LAFEMME BLACK (OBSIDIAN)": "HANDBAG", "ANTITHEFT BLACK": "BACKPACK"},
-                           {"CODE 3": "BACKPACK"})
+NAMES = {"LAFEMME BLACK (OBSIDIAN)": "HANDBAG", "ANTITHEFT BLACK": "BACKPACK"}
+RESOLVE = cc.make_resolver(_infer, NAMES, {"CODE 3": "BACKPACK"}, raw=False)        # colour families
+RESOLVE_RAW = cc.make_resolver(_infer, NAMES, {"CODE 3": "BACKPACK"}, raw=True)     # colours as named in Odoo
 
 
 def test_fallback_bag_drops_colour_words():
@@ -115,3 +116,22 @@ def test_kenya_sales_leave_out_website_jumia_staff_and_other_markets():
 
 def test_sum_shops_nets_each_product_over_the_shops():
     assert cc.sum_shops({"HTN": {"A": 3, "B": -1}, "MSA": {"A": 2, "B": 1}, "KSM": {"C": -2}}) == {"A": 5}
+
+
+
+# ── Colours as named in Odoo (RAW_COLOURS, 12 Oct 2026) ────────────────────
+
+def test_raw_colour_is_the_name_after_the_bag():
+    assert cc.raw_colour("CODE 3 ANTELOPE BROWN", "CODE 3") == "Antelope Brown"
+    assert cc.raw_colour("PIONEER SPICE", "PIONEER") == "Spice"
+    assert cc.raw_colour("LAFEMME WINE RED (MULBERRY)", "LAFEMME") == "Wine Red (Mulberry)"
+    assert cc.raw_colour("LOOP BP CN BLACK", "LOOP BP") == "CN Black"
+    assert cc.raw_colour("CAIRO BACKPACK BLACK", "CAIRO BP") == "Black"          # promo alias in the name
+    assert cc.raw_colour("ANTITHEFT", "ANTITHEFT") == "Other"                   # no colour in the name
+    assert cc.raw_colour("PIONEER BLACK/CRACKED", "PIONEER") == "Black/Cracked"
+
+
+def test_raw_resolver_keeps_shades_apart_and_rows_carry_the_family():
+    assert RESOLVE_RAW("CODE 3 NUDE") == ("BACKPACK", "CODE 3", "Nude")
+    rows, _ = cc.rollup({}, {"CODE 3 BROWN": 10, "CODE 3 ANTELOPE BROWN": 3}, RESOLVE_RAW)
+    assert sorted((r["col"], r["stock"], r["fam"]) for r in rows) == [("Antelope Brown", 3, "Brown"), ("Brown", 10, "Brown")]
