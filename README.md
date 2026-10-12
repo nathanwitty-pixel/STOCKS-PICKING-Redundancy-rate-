@@ -161,11 +161,12 @@ they scroll in their own window-tall box). The chosen market, period, offer and 
 
 1. Push this repo (GitHub Desktop → **Push origin**).
 2. share.streamlit.io → **Create app** → repo `nathanwitty-pixel/STOCKS-PICKING-Redundancy-rate-`, branch `main`,
-   main file **`streamlit_app.py`** (or run `Stocks Picking app (deploy).bat` → http://localhost:8503 → **Deploy**).
+   main file **`streamlit_app.py`** (or click **Deploy** at the top right of the app running on this PC).
 3. **Advanced settings → Secrets**: the Odoo database, as in the dashboard app's Secrets:
    `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (or one `DATABASE_URL`). Then **Deploy**.
 
 Files: `requirements.txt` (Streamlit Cloud installs it), `.gitignore` (keeps `.env` and secrets out),
-`sync_from_dashboard.py`, `Stocks Picking app (deploy).bat` (local app with Streamlit's Deploy button, port 8503).
+`sync_from_dashboard.py`. Streamlit's **Deploy** button shows at the top right when the app runs on this PC
+(`.streamlit/config.toml` toolbarMode = auto; Streamlit Cloud viewers never see it; `SPR_HIDE_DEPLOY=1` hides it).
 
 

@@ -61,8 +61,9 @@ _AUTO_SECS = AUTO_REFRESH_MIN * 60
 BUILD_TIMEOUT = 600
 # SPR_NO_AUTOREFRESH=1 (testing): never rebuild on a page view, no idle-tab reload.
 NO_AUTOREFRESH = os.environ.get("SPR_NO_AUTOREFRESH") == "1"
-# SPR_SHOW_DEPLOY=1 (local only): keep Streamlit's header with its Deploy button (to deploy this app from this repo).
-SHOW_DEPLOY = os.environ.get("SPR_SHOW_DEPLOY") == "1"
+# Streamlit's header with its Deploy button is shown (Streamlit itself shows Deploy only when run on this PC, never to
+# Streamlit Cloud viewers). SPR_HIDE_DEPLOY=1 hides the header and starts the page at the very top.
+SHOW_DEPLOY = os.environ.get("SPR_HIDE_DEPLOY") != "1"
 
 st.set_page_config(page_title="Denri · " + TITLE, page_icon="📦", layout="wide", initial_sidebar_state="collapsed")
 

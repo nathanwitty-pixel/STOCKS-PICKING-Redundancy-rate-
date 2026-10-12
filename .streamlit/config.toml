@@ -15,5 +15,5 @@ port = 8502
 gatherUsageStats = false
 
 [client]
-# "minimal": no Deploy button or developer menu (the app has its own Refresh)
-toolbarMode = "minimal"
+# "auto": the Deploy button shows when the app runs on this PC; Streamlit Cloud viewers never see it
+toolbarMode = "auto"
