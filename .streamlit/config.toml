@@ -8,8 +8,9 @@ textColor = "#e2e8f0"
 font = "sans serif"
 
 [server]
-headless = false
-port = 8502
+# Streamlit Cloud: headless (no start-up prompt) on its default port 8501. On this PC the app is started with
+# --server.port 8502 --server.headless false (streamlit_app.py / Stocks Picking app.bat), next to the dashboard on 8501.
+headless = true
 
 [browser]
 gatherUsageStats = false

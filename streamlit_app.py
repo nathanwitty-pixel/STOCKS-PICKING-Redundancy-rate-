@@ -26,12 +26,15 @@ import time
 from html import escape as _esc
 
 # ── Auto-launch: plain `python streamlit_app.py` re-launches itself via `streamlit run` ──
+# Started on this PC (VS Code ▶ / python streamlit_app.py): port 8502 (the dashboard has 8501) and open the browser.
+# Streamlit Cloud runs `streamlit run` itself, so it keeps .streamlit/config.toml (headless, its port 8501).
+_LOCAL_ARGS = ["--server.port", "8502", "--server.headless", "false"]
 _FALLBACK_PYTHON = r"C:\ProgramData\anaconda3\python.exe"     # the Marketing dashboard's Python
 try:
     import streamlit as st
 except ImportError:
     if os.path.exists(_FALLBACK_PYTHON) and os.path.normcase(sys.executable) != os.path.normcase(_FALLBACK_PYTHON):
-        sys.exit(subprocess.run([_FALLBACK_PYTHON, "-m", "streamlit", "run", os.path.abspath(__file__), *sys.argv[1:]]).returncode)
+        sys.exit(subprocess.run([_FALLBACK_PYTHON, "-m", "streamlit", "run", os.path.abspath(__file__), *_LOCAL_ARGS, *sys.argv[1:]]).returncode)
     print("Streamlit isn't installed for " + sys.executable + " — run: pip install streamlit")
     input("Press Enter to close...")
     sys.exit(1)
@@ -46,7 +49,7 @@ def _under_streamlit():
 
 
 if __name__ == "__main__" and not _under_streamlit():
-    sys.exit(subprocess.run([sys.executable, "-m", "streamlit", "run", os.path.abspath(__file__), *sys.argv[1:]]).returncode)
+    sys.exit(subprocess.run([sys.executable, "-m", "streamlit", "run", os.path.abspath(__file__), *_LOCAL_ARGS, *sys.argv[1:]]).returncode)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 _SIBLING = os.path.join(os.path.dirname(BASE), "Marketing_dashboard")
