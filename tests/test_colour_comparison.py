@@ -97,3 +97,21 @@ def test_offer_tags_prefix_match_order_and_new_products():
 def test_moves_sql_uses_market_codes():
     q = cc.moves_sql(("DAR",))
     assert "IN ('DAR')" in q and "{" not in q
+
+
+# ── Kenya = the shops only (12 Oct 2026) ───────────────────────────────────
+
+def test_kenya_shop_codes_add_machakos_and_nyeri_once():
+    assert cc.kenya_shop_codes(("STAR", "MSA", "NYERI")) == ("STAR", "MSA", "NYERI", "MACHA")
+    for c in ("WEB", "CBD", "VLD"):
+        assert c not in cc.kenya_shop_codes(("STAR",))
+
+
+def test_kenya_sales_leave_out_website_jumia_staff_and_other_markets():
+    f = cc.kenya_shop_sales_filter()
+    for t in ("'website sales'", "'jumia'", "'staff pos'", "'sinza'", "'uganda'", "LIKE '%website%'"):
+        assert t in f
+
+
+def test_sum_shops_nets_each_product_over_the_shops():
+    assert cc.sum_shops({"HTN": {"A": 3, "B": -1}, "MSA": {"A": 2, "B": 1}, "KSM": {"C": -2}}) == {"A": 5}

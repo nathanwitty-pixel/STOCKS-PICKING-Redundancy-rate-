@@ -28,6 +28,11 @@ HTML = os.path.join(BASE, "colour_comparison.html")
 MARKETS = (("kenya", "Kenya"), ("sinza", "Sinza"), ("uganda", "Uganda"))
 WINDOW_DAYS = 28
 PERIODS = ("d7", "d28", "mtd")
+# Kenya = every Kenya SHOP: lib/stock's 16 shop codes + Machakos and Nyeri, never the Website (WEB), the CBD /
+# Validation (VLD) warehouses or any other store. Sales likewise come from the shop tills only (the Website, Jumia and
+# Staff POS tills are left out), so units sold and stock cover the same shops everywhere on the page.
+EXTRA_KENYA_SHOPS = ("MACHA", "NYERI")
+KENYA_NON_SHOP_TILLS = ("website sales", "jumia", "staff pos")
 DAILY_DAYS = 120          # Stock rate: days of daily sales / stock moves shipped, so any period (incl. Custom) works in the page
 
 # Done stock moves into / out of a market's shops, per product per day (moves between two of its shops cancel).
@@ -141,6 +146,26 @@ def moves_sql(codes):
     inside = lambda a: "(%s.usage = 'internal' AND split_part(%s.complete_name, '/', 1) IN (%s))" % (   # noqa: E731
         a, a, ", ".join("'%s'" % c for c in codes))
     return MOVES_SQL.format(dst=inside("ld"), src=inside("ls"))
+
+
+def kenya_shop_codes(base_codes):
+    """lib/stock's Kenya shop codes + the shops it doesn't list yet (Machakos, Nyeri) — order kept, no repeats."""
+    return tuple(dict.fromkeys(tuple(base_codes) + EXTRA_KENYA_SHOPS))
+
+
+def kenya_shop_sales_filter():
+    """SQL filter for the Kenya shop tills: not the Sinza / Uganda tills, not the Website, Jumia or Staff POS tills."""
+    out = ", ".join("'%s'" % t for t in ("sinza", "dar-es-alam", "uganda") + KENYA_NON_SHOP_TILLS)
+    return ("AND lower(COALESCE(pc.\"name\",'')) NOT IN (%s) AND lower(COALESCE(pc.\"name\",'')) NOT LIKE '%%website%%'" % out)
+
+
+def sum_shops(by_shop):
+    """{shop code: {name: on-hand}} -> {name: on-hand summed over the shops}, only names above 0."""
+    tot = Counter()
+    for names in (by_shop or {}).values():
+        for n, q in names.items():
+            tot[n] += q or 0
+    return {n: q for n, q in tot.items() if q > 0}
 
 
 def daily_series(sold_daily, net_daily, rcv_daily, day0):
@@ -317,7 +342,7 @@ def load(today=None):
     start = min(end - datetime.timedelta(days=WINDOW_DAYS - 1), m_start, day0)
     infer, _ = smc.bag_classifier(set())
     resolve = make_resolver(infer, _bag_names(), _tiers())
-    sql = {"kenya": smc.BAG_SALES_DAILY_SQL, "sinza": smc.BAG_SALES_DAILY_SINZA_SQL,
+    sql = {"kenya": smc._bag_sales_daily_sql(kenya_shop_sales_filter()), "sinza": smc.BAG_SALES_DAILY_SINZA_SQL,
            "uganda": smc.BAG_SALES_DAILY_UGANDA_SQL}
     markets = {}
     for mk, label in MARKETS:
@@ -326,9 +351,10 @@ def load(today=None):
         for r in ([] if df is None else df.itertuples(index=False)):
             daily[str(r.name)][str(r.d)[:10]] = daily[str(r.name)].get(str(r.d)[:10], 0) + int(r.units or 0)
         sold = bucket(daily, end, m_start)
-        stock = lstock.odoo_stock_by_product(market=mk) or {}
+        codes = kenya_shop_codes(lstock.KENYA_SHOP_CODES) if mk == "kenya" else lstock._codes_for(mk)
+        stock = sum_shops(lstock.odoo_stock_by_shop_code(codes, positive_only=False))
         net, rcv = defaultdict(dict), defaultdict(dict)
-        mv = db.run_query_cached(moves_sql(lstock._codes_for(mk)), {"s": day0}, ttl_min=30)
+        mv = db.run_query_cached(moves_sql(codes), {"s": day0}, ttl_min=30)
         for r in ([] if mv is None else mv.itertuples(index=False)):
             net[str(r.name)][str(r.d)[:10]] = float(r.net or 0)
             rcv[str(r.name)][str(r.d)[:10]] = float(r.rcv or 0)

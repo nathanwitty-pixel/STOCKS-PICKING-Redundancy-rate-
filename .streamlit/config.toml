@@ -1,0 +1,19 @@
+# Same as the Marketing dashboard's app (its CSS paints the V5 light / dark look over this).
+[theme]
+base = "dark"
+primaryColor = "#4f46e5"
+backgroundColor = "#0f1117"
+secondaryBackgroundColor = "#1e2130"
+textColor = "#e2e8f0"
+font = "sans serif"
+
+[server]
+headless = false
+port = 8502
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# "minimal": no Deploy button or developer menu (the app has its own Refresh)
+toolbarMode = "minimal"
