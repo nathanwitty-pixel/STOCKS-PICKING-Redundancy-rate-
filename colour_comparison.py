@@ -3,9 +3,11 @@ side by side — live shop stock, units sold and the redundancy rate — grouped
 MARKETING_WORK_PLAN "colour comparison" sheet (spec: README.md in this folder). Also the Stock rate section:
 units sold in a period ÷ the shop stock there at its start, beside today's stock and on offer / not on offer.
 
-Lives outside the Marketing dashboard but reuses it: the Odoo connection (its .env), lib/ (stock, colours,
-db, report month), self_made_combos' sales queries + bag resolver, and its bag_names.csv / bag_tiers.csv.
-Point DASHBOARD_DIR at the dashboard folder if it moves.
+Its own app (own GitHub repo), built on pieces of the Marketing dashboard: the Odoo connection, lib/ (stock, colours,
+db, report month, receipt combos), self_made_combos' sales queries + bag resolver, bag_names.csv / bag_tiers.csv and
+the offer lists. They are read from the Marketing_dashboard folder next to this one when it is there (this PC: always
+its latest files and its .env), else from the copies in shared/ (Streamlit Cloud; refresh them with
+sync_from_dashboard.py). DASHBOARD_DIR overrides both.
 
     python colour_comparison.py        # DENRI_LAUNCHER=1 to skip the browser tab
 """
@@ -19,7 +21,9 @@ import webbrowser
 from collections import Counter, defaultdict
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-DASHBOARD = os.environ.get("DASHBOARD_DIR") or os.path.join(os.path.dirname(BASE), "Marketing_dashboard")
+_SIBLING = os.path.join(os.path.dirname(BASE), "Marketing_dashboard")
+DASHBOARD = (os.environ.get("DASHBOARD_DIR")
+             or (_SIBLING if os.path.isfile(os.path.join(_SIBLING, "self_made_combos.py")) else os.path.join(BASE, "shared")))
 sys.path.insert(0, DASHBOARD)
 
 from lib import colours   # noqa: E402  (from the dashboard)
@@ -283,6 +287,13 @@ def _new_products():
         with open(os.path.join(DASHBOARD, "bags_on_offer.html"), encoding="utf-8") as f:
             m = re.search(r"const BOO = (.*?);\n</script>", f.read(), re.S)
         names = json.loads(m.group(1)).get("newProducts") if m else None
+        if names:
+            return [_norm(n) for n in names]
+    except (OSError, ValueError):
+        pass
+    try:                                                     # shared/: the list copied from that page
+        with open(os.path.join(DASHBOARD, "new_products.json"), encoding="utf-8") as f:
+            names = json.load(f).get("newProducts")
         if names:
             return [_norm(n) for n in names]
     except (OSError, ValueError):

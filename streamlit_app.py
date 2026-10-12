@@ -1,4 +1,7 @@
-"""streamlit_app.py — STOCKS PICKING (Redundancy rate) on its own Streamlit app.
+"""streamlit_app.py — STOCKS PICKING (Redundancy rate): its own Streamlit app, its own GitHub repo.
+
+Streamlit Cloud: this repo, main file = streamlit_app.py, Secrets = the Odoo database (DB_HOST, DB_PORT, DB_NAME,
+DB_USER, DB_PASSWORD, or DATABASE_URL). Spec: README.md › Streamlit app.
 
 Shows colour_comparison.html and keeps it fresh from Odoo, like the Marketing dashboard's app:
   • Refresh rebuilds the page now (colour_comparison.py, bypassing the Odoo cache);
@@ -8,10 +11,10 @@ Shows colour_comparison.html and keeps it fresh from Odoo, like the Marketing da
     screen until the new one is ready.
 The top looks like the dashboard's: the brand bar (tab with its travelling light, Light / Dark switch, contact,
 owner), the title strip with the live clock pill and Refresh, and the page in the dashboard's V5 theme. The
-shared look files (v5_theme.css / .js, top_nav.js, kpi_drag.js) and the owner are read from the dashboard folder.
+look files (v5_theme.css / .js, top_nav.js, kpi_drag.js) and the owner (dashboard_pages.json) come from the Marketing
+dashboard folder next to this one when it is there, else from the copies in shared/.
 
-Run:  python streamlit_app.py   (or VS Code ▶ / double-click "Stocks Picking app.bat")
-Spec: README.md › Streamlit app.
+Run:  python streamlit_app.py   (or VS Code ▶ / double-click "Stocks Picking app.bat"; port 8502)
 """
 import json
 import os
@@ -46,7 +49,9 @@ if __name__ == "__main__" and not _under_streamlit():
     sys.exit(subprocess.run([sys.executable, "-m", "streamlit", "run", os.path.abspath(__file__), *sys.argv[1:]]).returncode)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-DASHBOARD = os.environ.get("DASHBOARD_DIR") or os.path.join(os.path.dirname(BASE), "Marketing_dashboard")
+_SIBLING = os.path.join(os.path.dirname(BASE), "Marketing_dashboard")
+DASHBOARD = (os.environ.get("DASHBOARD_DIR")                  # the look files + owner: the dashboard next door, else shared/
+             or (_SIBLING if os.path.isfile(os.path.join(_SIBLING, "v5_theme.js")) else os.path.join(BASE, "shared")))
 HTML = os.path.join(BASE, "colour_comparison.html")
 BUILDER = os.path.join(BASE, "colour_comparison.py")
 TITLE = "Stocks Picking (Redundancy rate)"
@@ -56,6 +61,8 @@ _AUTO_SECS = AUTO_REFRESH_MIN * 60
 BUILD_TIMEOUT = 600
 # SPR_NO_AUTOREFRESH=1 (testing): never rebuild on a page view, no idle-tab reload.
 NO_AUTOREFRESH = os.environ.get("SPR_NO_AUTOREFRESH") == "1"
+# SPR_SHOW_DEPLOY=1 (local only): keep Streamlit's header with its Deploy button (to deploy this app from this repo).
+SHOW_DEPLOY = os.environ.get("SPR_SHOW_DEPLOY") == "1"
 
 st.set_page_config(page_title="Denri · " + TITLE, page_icon="📦", layout="wide", initial_sidebar_state="collapsed")
 
@@ -75,9 +82,15 @@ def _load_secrets_into_env():
         keys = list(secrets.keys())
     except Exception:                                        # noqa: BLE001  (no secrets.toml locally)
         return
-    for key in ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", "DATABASE_URL", "DASHBOARD_DIR"):
+    for key in ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", "DATABASE_URL", "SUPABASE_DB_URL",
+                "SERVICE_ACCOUNT_JSON", "SERVICE_ACCOUNT_B64"):
         if key in keys and str(secrets[key]).strip():
             os.environ[key] = str(secrets[key])
+    for tkey in ("gcp_service_account", "service_account"):        # a TOML table → the JSON lib/ expects
+        if tkey in keys and not os.environ.get("SERVICE_ACCOUNT_JSON"):
+            os.environ["SERVICE_ACCOUNT_JSON"] = json.dumps(dict(secrets[tkey]))
+    os.environ.setdefault("DENRI_LAUNCHER", "1")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 
 _load_secrets_into_env()
@@ -261,6 +274,13 @@ _css = """<style>
 </style>"""
 for _k, _v in {**_V5, **_OWN}.items():
     _css = _css.replace("__" + _k + "__", _v)
+if SHOW_DEPLOY:   # bring back Streamlit's header (Deploy button) and start the page below it
+    _css = (_css.replace('[data-testid="stAppDeployButton"], .stAppDeployButton, [data-testid="stMainMenu"] {display:none !important;}', '')
+            .replace('header[data-testid="stHeader"], [data-testid="stToolbar"],', '')
+            .replace('.block-container {padding: 0.6rem 1.25rem 0 1.25rem !important;', '.block-container {padding: 3.6rem 1.25rem 0 1.25rem !important;')
+            .replace('[data-testid="stElementContainer"]:has(.tn-bar), .element-container:has(.tn-bar) {position:sticky; top:0;',
+                     '[data-testid="stElementContainer"]:has(.tn-bar), .element-container:has(.tn-bar) {position:sticky; top:3.75rem;')
+            .replace('</style>', '  header[data-testid="stHeader"] {background: var(--v5-bg) !important;}\n</style>'))
 st.markdown(_css, unsafe_allow_html=True)
 
 # ── Top bar: brand · the page tab (travelling light) · Light / Dark · contact · owner ──

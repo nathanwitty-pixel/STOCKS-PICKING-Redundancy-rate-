@@ -1,0 +1,19 @@
+# ─────────────────────────────────────────────────────────────
+# This month's NEW PRODUCTS — the list on the New Products page, the Bags On vs
+# Off Offer "new products" card, and the Monthly Report's new-products section.
+# One BAG TYPE per line, exactly as in MONTHLY_TARGET col A (case-insensitive).
+# Blank lines and anything after a '#' are ignored.
+#
+# This list wins over the ✅ ticks in MONTHLY_TARGET col I. Leave it empty to go
+# back to the sheet ticks. Edit anytime, then hit Refresh (or run python main.py).
+# ─────────────────────────────────────────────────────────────
+
+LOOP BP
+ZULA
+LAMORA
+TAJI
+IMANI
+NALA
+AMORA
+VOYAGE
+LAFEMME        # the newest

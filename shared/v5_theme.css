@@ -1,0 +1,158 @@
+/* v5_theme.css — "Dashboard V5" shape + motion layer for the dashboard pages.
+   Loaded into each page by v5_theme.js (via shell.html); everything is scoped to html[data-v5]
+   so a page opened on its own is untouched. Colours stay semantic — this file only adds the
+   V5 geometry (16px cards, soft elevation, hover lift) and the indigo pill controls. */
+
+html[data-v5] {
+  --v5-indigo:      #4f46e5;
+  --v5-indigo-hi:   #6366f1;
+  --v5-indigo-soft: rgba(79, 70, 229, 0.10);
+  --v5-track:       #14161f;   /* dark pill track, same in both modes (as in the V5 reference) */
+  --v5-track-ink:   #a1a7bb;
+  --v5-radius:      16px;
+  --v5-shadow:      0 8px 24px rgba(0, 0, 0, 0.28);
+  --v5-shadow-hi:   0 14px 34px rgba(0, 0, 0, 0.38);
+  --v5-ease:        cubic-bezier(0.16, 1, 0.3, 1);
+}
+html[data-v5="light"] {
+  --v5-shadow:    0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px rgba(16, 24, 40, 0.06);
+  --v5-shadow-hi: 0 2px 4px rgba(16, 24, 40, 0.05), 0 14px 32px rgba(79, 70, 229, 0.12);
+  color-scheme: light;
+}
+
+html[data-v5] body,
+html[data-v5] button,
+html[data-v5] input,
+html[data-v5] select,
+html[data-v5] textarea {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+html[data-v5] body { font-feature-settings: 'cv11', 'ss01'; }
+html[data-v5] [class*="value"], html[data-v5] [class*="-val"], html[data-v5] td, html[data-v5] .number {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Cards: 16px corners + soft elevation ─────────────────────── */
+html[data-v5] .card,
+html[data-v5] .kpi,
+html[data-v5] .panel,
+html[data-v5] .insight-card,
+html[data-v5] .region-card,
+html[data-v5] .table-wrap,
+html[data-v5] .tbl-wrap,
+html[data-v5] .mini,
+html[data-v5] .insight,
+html[data-v5] .rec {
+  border-radius: var(--v5-radius) !important;
+  box-shadow: var(--v5-shadow);
+}
+
+/* Framer-style hover lift on the metric tiles only (not on tables / big panels) */
+html[data-v5] .card,
+html[data-v5] .kpi,
+html[data-v5] .insight-card,
+html[data-v5] .region-card,
+html[data-v5] .mini {
+  transition: transform 0.35s var(--v5-ease), box-shadow 0.35s var(--v5-ease), border-color 0.2s var(--v5-ease);
+}
+html[data-v5] .card:hover,
+html[data-v5] .kpi:hover,
+html[data-v5] .insight-card:hover,
+html[data-v5] .region-card:hover,
+html[data-v5] .mini:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--v5-shadow-hi);
+}
+html[data-v5] .card-value, html[data-v5] .kpi-value, html[data-v5] .k-val, html[data-v5] .m-val {
+  letter-spacing: -0.02em;
+}
+
+/* ── Segmented tracks (joined buttons) → dark pill track, indigo active ── */
+html[data-v5] .cp-seg-wrap,
+html[data-v5] .se-seg-wrap {
+  background: var(--v5-track) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 4px !important;
+  gap: 2px;
+  box-shadow: var(--v5-shadow);
+}
+html[data-v5] .cp-seg,
+html[data-v5] .se-seg {
+  background: transparent !important;
+  color: var(--v5-track-ink) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  transition: background 0.2s var(--v5-ease), color 0.2s var(--v5-ease);
+}
+html[data-v5] .cp-seg:hover,
+html[data-v5] .se-seg:hover { color: #ffffff !important; }
+html[data-v5] .cp-seg.active,
+html[data-v5] .se-seg.active {
+  background: var(--v5-indigo) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.45);
+}
+
+/* ── Stand-alone toggle buttons → pills, indigo active ─────────── */
+html[data-v5] .seg-btn,
+html[data-v5] .region-tab,
+html[data-v5] .smc-region-btn {
+  border-radius: 999px !important;
+  transition: background 0.2s var(--v5-ease), color 0.2s var(--v5-ease), border-color 0.2s var(--v5-ease);
+}
+html[data-v5="light"] .seg-btn,
+html[data-v5="light"] .region-tab,
+html[data-v5="light"] .smc-region-btn {
+  background: #f9fafb !important;
+  border: 1px solid #d9dde5 !important;
+  color: #334155 !important;
+}
+html[data-v5="light"] .seg-btn:hover,
+html[data-v5="light"] .region-tab:hover,
+html[data-v5="light"] .smc-region-btn:hover { border-color: var(--v5-indigo) !important; color: var(--v5-indigo) !important; }
+html[data-v5] .seg-btn.is-active,
+html[data-v5] .region-tab.active,
+html[data-v5] .smc-region-btn.is-active {
+  background: var(--v5-indigo) !important;
+  border-color: var(--v5-indigo) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+/* ── Light mode extras ─────────────────────────────────────────── */
+html[data-v5="light"] .aura-layer-1,
+html[data-v5="light"] .aura-layer-2,
+html[data-v5="light"] .aura-layer-3 { display: none !important; }
+
+html[data-v5="light"] ::selection { background: rgba(79, 70, 229, 0.18); }
+html[data-v5="light"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+html[data-v5="light"] ::-webkit-scrollbar-thumb { background: #c3c8d4; border-radius: 999px; border: 2px solid #e9ebf0; }
+html[data-v5="light"] ::-webkit-scrollbar-track { background: transparent; }
+
+html[data-v5] :focus-visible { outline: 2px solid var(--v5-indigo); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-v5] .card:hover, html[data-v5] .kpi:hover, html[data-v5] .insight-card:hover,
+  html[data-v5] .region-card:hover, html[data-v5] .mini:hover { transform: none; }
+}
+
+/* ── KPI tiles: a purple → pink light travelling round the border ───────────────
+   Two short gradient arcs on a conic gradient whose start angle spins; masked to a 1.5px ring.
+   ::after because several pages already use .card::before for the coloured top stripe.
+   Only tiles with a value directly inside (big panels that merely contain KPIs stay plain). */
+@property --v5-glow-a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, > .v)) { position: relative; }
+html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, > .v))::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 1;
+  background: conic-gradient(from var(--v5-glow-a), transparent 0deg 30deg, #a855f7 60deg, #ec4899 80deg, transparent 100deg 210deg,
+                             #a855f7 240deg, #ec4899 260deg, transparent 280deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  animation: v5GlowSpin 5s linear infinite;
+}
+@keyframes v5GlowSpin { to { --v5-glow-a: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, > .v))::after { animation: none; }
+}

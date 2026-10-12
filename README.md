@@ -1,8 +1,9 @@
 # STOCKS PICKING (Redundancy rate) — every bag's colours side by side (Kenya · Sinza · Uganda)
 
-> **Streamlit app (12 Oct 2026):** double-click `Stocks Picking app.bat` (or `python streamlit_app.py`) →
-> http://localhost:8502. It reloads from Odoo like the Marketing dashboard: **Refresh** rebuilds now, and the page
-> rebuilds by itself once it is over 60 min old. See *Streamlit app* below.
+> **Its own Streamlit app and its own GitHub repo** (`nathanwitty-pixel/STOCKS-PICKING-Redundancy-rate-`), separate from
+> the Marketing dashboard. Locally: double-click `Stocks Picking app.bat` (or `python streamlit_app.py`) → http://localhost:8502.
+> It reloads from Odoo like the dashboard: **Refresh** rebuilds now, and the page rebuilds by itself once it is over 60 min old.
+> See *Streamlit app* below.
 
 The live version of the marketing team's **"colour comparison"** sheet (MARKETING_WORK_PLAN →
 "(MARKETING TEAM INFO) STOCKS PICKING (Redundancy rate)"): Category → Bag → Colour, with each colour's
@@ -148,8 +149,23 @@ they scroll in their own window-tall box). The chosen market, period, offer and 
   screen, and the new page swaps in when it's done. A failed build shows its log and keeps the old page.
 - `page_sidebar.js` / `chart_switcher.js` are inlined into the frame; the frame sizes itself to the page.
 - `SPR_NO_AUTOREFRESH=1` turns auto-refresh off (testing).
-- It needs the Marketing dashboard folder next to this one (Odoo connection and `lib/`), so it runs on this PC.
-  Putting it on Streamlit Cloud would need this folder in a GitHub repo together with the dashboard's `lib/`.
+- **Runs on its own.** The pieces of the Marketing dashboard it needs are copied in `shared/`: `lib/` (Odoo connection,
+  stock, colours, report month, receipt combos), the sales SQL + bag resolver from `self_made_combos.py`, the bag lists,
+  the offer lists (`bags_offer_source*.json`, `offers_monthly.csv`, `new_products.json`), the look files and the owner.
+  On this PC the generator and the app use the `Marketing_dashboard` folder next door instead (its latest files and its
+  `.env`); on Streamlit Cloud they use `shared/`. `DASHBOARD_DIR` overrides both.
+- **Keep `shared/` current:** after the dashboard's offers or bags change, run `python sync_from_dashboard.py`, then commit
+  and push (GitHub Desktop). Streamlit Cloud redeploys from the push.
 
-The dashboard also has a copy as its Marketing › Stocks Picking menu (`stocks_picking.py`, not published yet).
+### Deploy on Streamlit Community Cloud
+
+1. Push this repo (GitHub Desktop → **Push origin**).
+2. share.streamlit.io → **Create app** → repo `nathanwitty-pixel/STOCKS-PICKING-Redundancy-rate-`, branch `main`,
+   main file **`streamlit_app.py`** (or run `Stocks Picking app (deploy).bat` → http://localhost:8503 → **Deploy**).
+3. **Advanced settings → Secrets**: the Odoo database, as in the dashboard app's Secrets:
+   `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (or one `DATABASE_URL`). Then **Deploy**.
+
+Files: `requirements.txt` (Streamlit Cloud installs it), `.gitignore` (keeps `.env` and secrets out),
+`sync_from_dashboard.py`, `Stocks Picking app (deploy).bat` (local app with Streamlit's Deploy button, port 8503).
+
 

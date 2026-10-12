@@ -1,0 +1,20 @@
+# ── secrets: never commit ──
+.env
+.env*
+*.pem
+*.key
+service_account*.json
+secrets*.json
+.streamlit/secrets.toml
+
+# ── Python / caches ──
+__pycache__/
+*.pyc
+.pytest_cache/
+.odoo_cache/
+shared/.odoo_cache/
+
+# ── OS junk ──
+Thumbs.db
+.DS_Store
+desktop.ini
