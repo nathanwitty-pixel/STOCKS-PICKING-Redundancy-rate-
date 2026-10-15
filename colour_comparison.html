@@ -818,27 +818,53 @@ const CC = {"generated":"12 Oct 2026 16:26","end":"2026-10-11","windows":{"d7":[
 </script>
 <script>
 /* In a frame sized to the whole page (the Streamlit apps), the page itself never scrolls, so a sticky table header
-   has nothing to stick to. There, each big table gets its own scroll box as tall as the browser window less the
-   controls above it: scrolled to the table, the Filter bar, the column names and the filter boxes stay in view
-   while the rows scroll. Opened as a plain page, the boxes keep their 78vh height. */
+   has nothing to stick to. There, the big tables drop their own scroll box and their header (column names + filter
+   boxes) follows the app's scroll instead: once the table's top passes under the app's top bar, the header stays
+   pinned there until the table's last rows go by, then leaves with the table. Opened as a plain page, the boxes
+   keep their 78vh height and the CSS sticky header. */
 (function () {
   if (!window.frameElement) return;
-  var BOXES = [['rt-table', 'rt-filterbar'], ['cc-table', 'cc-cats']];      // [scroll box, first control above it]
-  function fitTableBoxes() {
-    var vh; try { vh = window.top.innerHeight; } catch (e) { return; }
-    if (!vh) return;
-    var bar = 0;                                                      // the app's sticky top bar, if any
-    try { var tb = window.top.document.querySelector('.tn-bar'); if (tb) bar = tb.getBoundingClientRect().height + 12; } catch (e) {}
-    BOXES.forEach(function (b) {
-      var box = document.getElementById(b[0]), first = document.getElementById(b[1]);
-      if (!box || !first) return;
-      var controls = box.getBoundingClientRect().top - first.getBoundingClientRect().top;   // the bars and hint above the table
-      box.style.maxHeight = Math.max(320, Math.round(vh - bar - controls - 24)) + 'px';
+  var top; try { top = window.top.document; } catch (e) { return; }
+  var TABLES = [['rt-table', 'rt-tbl'], ['cc-table', 'cc-tbl']];     // [scroll box, table]
+  TABLES.forEach(function (t) {
+    var box = document.getElementById(t[0]);
+    if (box) { box.style.maxHeight = 'none'; box.style.overflowY = 'visible'; }
+  });
+  var css = document.createElement('style');
+  css.textContent = '.ftbl thead.pin th { position: relative; z-index: 3; will-change: transform; }'
+    + '.ftbl thead.pin tr.flt th { box-shadow: 0 8px 12px -8px rgba(0,0,0,0.55); }';
+  document.head.appendChild(css);
+  function barBottom() {                                              // the app's header / sticky top bar, when stuck at the top
+    var y = 0;
+    ['[data-testid="stHeader"]', '.tn-bar'].forEach(function (q) {
+      var el = top.querySelector(q); if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (r.height && r.top <= 2 && r.bottom > y) y = r.bottom;
+    });
+    return y;
+  }
+  var pend = false;
+  function place() {
+    pend = false;
+    var fe = window.frameElement.getBoundingClientRect(), bar = barBottom();
+    TABLES.forEach(function (t) {
+      var tbl = document.getElementById(t[1]); if (!tbl) return;
+      var head = tbl.tHead; if (!head) return;
+      var r = tbl.getBoundingClientRect(), h = head.getBoundingClientRect().height;
+      var shift = bar - (fe.top + r.top);                             // how far the table's top is under the bar
+      shift = Math.min(shift, r.height - h - 40);                    // leave with the table's last rows
+      var on = shift > 0;
+      head.classList.toggle('pin', on);
+      var tf = on ? 'translateY(' + Math.round(shift) + 'px)' : '';
+      Array.prototype.forEach.call(head.querySelectorAll('th'), function (th) { th.style.transform = tf; });
     });
   }
-  window.addEventListener('load', fitTableBoxes);
-  setTimeout(fitTableBoxes, 400);
-  try { window.top.addEventListener('resize', fitTableBoxes); } catch (e) {}
+  function later() { if (!pend) { pend = true; requestAnimationFrame(place); } }
+  top.addEventListener('scroll', later, true);                        // whichever element of the app scrolls
+  try { window.top.addEventListener('resize', later); } catch (e) {}
+  ['click', 'input', 'change'].forEach(function (ev) { document.addEventListener(ev, function () { setTimeout(later, 50); }, true); });
+  window.addEventListener('load', later);
+  [300, 1200].forEach(function (ms) { setTimeout(later, ms); });
 })();
 </script>
 <!-- Page sidebar (page_sidebar.js): Regions picker + "In this report" with scroll-spy.

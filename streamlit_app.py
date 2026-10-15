@@ -5,6 +5,8 @@ DB_USER, DB_PASSWORD, or DATABASE_URL). Spec: README.md › Streamlit app.
 
 Shows colour_comparison.html and keeps it fresh from Odoo, like the Marketing dashboard's app:
   • Refresh rebuilds the page now (colour_comparison.py, bypassing the Odoo cache);
+  • opening the app (a new browser tab / reload) rebuilds it from Odoo too, unless the last build is under
+    FRESH_ON_OPEN_MIN minutes old;
   • the page rebuilds by itself when it is older than AUTO_REFRESH_MIN minutes (checked on every view and
     every minute while a tab is open);
   • a rebuild runs in the background (one at a time, shared by every viewer) and the last build stays on
@@ -61,6 +63,9 @@ TITLE = "Stocks Picking (Redundancy rate)"
 PURPOSE = "Each bag's colours: redundancy rate, and units sold ÷ stock at the start beside stock now and on / not on offer"
 AUTO_REFRESH_MIN = 60
 _AUTO_SECS = AUTO_REFRESH_MIN * 60
+# Opening the app fetches the latest data, unless the page was rebuilt this recently (so several people
+# opening it together, or a reload right after a build, don't rebuild again).
+FRESH_ON_OPEN_MIN = 5
 BUILD_TIMEOUT = 600
 # SPR_NO_AUTOREFRESH=1 (testing): never rebuild on a page view, no idle-tab reload.
 NO_AUTOREFRESH = os.environ.get("SPR_NO_AUTOREFRESH") == "1"
@@ -117,7 +122,7 @@ def _page_age_secs():
 def _run_build(kind):
     j = _job()
     env = {**os.environ, "DENRI_LAUNCHER": "1", "PYTHONIOENCODING": "utf-8"}
-    if kind == "manual":
+    if kind in ("manual", "open"):
         env["DENRI_FORCE_FRESH"] = "1"                       # bypass the Odoo cache
     t0 = time.time()
     try:
@@ -133,8 +138,8 @@ def _run_build(kind):
 
 
 def start_build(kind):
-    """Start a rebuild unless one is running. kind: "manual" (Refresh) or "auto" (page older than the interval;
-    tried at most once per interval, so a failing build doesn't loop)."""
+    """Start a rebuild unless one is running. kind: "manual" (Refresh), "open" (a new session opened the app) or
+    "auto" (page older than the interval; tried at most once per interval, so a failing build doesn't loop)."""
     j = _job()
     with j["lock"]:
         if j["running"]:
@@ -363,6 +368,12 @@ with _rc:
                  help="Rebuild the page now from Odoo (about 40 s). The last build stays on screen until it's ready."):
         start_build("manual")
 
+# First run of this browser session (opening the app or reloading the tab): fetch the latest data from Odoo.
+if "opened" not in st.session_state:
+    st.session_state.opened = True
+    if not NO_AUTOREFRESH and _page_age_secs() >= FRESH_ON_OPEN_MIN * 60:
+        start_build("open")
+
 if not NO_AUTOREFRESH and _page_age_secs() >= _AUTO_SECS:
     start_build("auto")
 
@@ -374,7 +385,7 @@ def _watch():
     if j["running"]:
         st.session_state.watching = j["started"]
         el = time.time() - j["started"]
-        what = "Refreshing" if j["kind"] == "manual" else "Auto-refreshing"
+        what = {"manual": "Refreshing", "open": "Loading the latest data"}.get(j["kind"], "Auto-refreshing")
         if j["secs"]:
             st.progress(min(0.97, el / j["secs"]), text=f"⟳ {what} — {int(el)} s of ~{int(j['secs'])} s · showing the last build until it's ready")
         else:
