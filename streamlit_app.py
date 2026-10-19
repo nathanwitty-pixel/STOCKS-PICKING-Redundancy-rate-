@@ -61,7 +61,8 @@ HTML = os.path.join(BASE, "colour_comparison.html")
 BUILDER = os.path.join(BASE, "colour_comparison.py")
 TITLE = "Stocks Picking (Redundancy rate)"
 PURPOSE = "Each bag's colours: redundancy rate, and units sold ÷ stock at the start beside stock now and on / not on offer"
-AUTO_REFRESH_MIN = 60
+# SPR_AUTO_REFRESH_MIN=2 (testing): a shorter interval, to watch the auto-refresh without waiting an hour.
+AUTO_REFRESH_MIN = float(os.environ.get("SPR_AUTO_REFRESH_MIN") or 60)
 _AUTO_SECS = AUTO_REFRESH_MIN * 60
 # Opening the app fetches the latest data, unless the page was rebuilt this recently (so several people
 # opening it together, or a reload right after a build, don't rebuild again).
@@ -156,7 +157,7 @@ def _ago(secs):
         return "Not built yet"
     m = int(secs // 60)
     return "Updated " + ("just now" if m < 1 else (f"{m} min ago" if m < 60 else f"{m // 60}h {m % 60}m ago")) \
-        + f" · auto {AUTO_REFRESH_MIN} min"
+        + f" · auto {AUTO_REFRESH_MIN:g} min"
 
 
 def _run_js(html):
