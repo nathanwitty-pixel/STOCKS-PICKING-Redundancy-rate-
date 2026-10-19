@@ -25,6 +25,11 @@ _SIBLING = os.path.join(os.path.dirname(BASE), "Marketing_dashboard")
 DASHBOARD = (os.environ.get("DASHBOARD_DIR")
              or (_SIBLING if os.path.isfile(os.path.join(_SIBLING, "self_made_combos.py")) else os.path.join(BASE, "shared")))
 sys.path.insert(0, DASHBOARD)
+# This PC: the dashboard's .env holds the Odoo login. Load it by path, so it is found even when the build uses the
+# shared/ copies (lib/db.py only looks for a .env above itself). Never overrides variables already set (Cloud secrets).
+if os.path.isfile(os.path.join(_SIBLING, ".env")):
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(_SIBLING, ".env"))
 
 from lib import colours   # noqa: E402  (from the dashboard)
 

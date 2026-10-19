@@ -202,12 +202,14 @@ _css = """<style>
   [data-testid="stDecoration"] {display:none !important;}
   .block-container {padding: 0.6rem 1.25rem 0 1.25rem !important; max-width: 100%;}
   .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {background: var(--v5-bg) !important;}
-  .stApp, .stApp p, .stApp label, .stApp span:not([data-testid="stIconMaterial"]) {font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;}
+  .stApp, .stApp p, .stApp label, .stApp span:not([data-testid="stIconMaterial"]):not([data-testid="stAlertDynamicIcon"]) {font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;}
   .st-key-refresh_btn [data-testid="stIconMaterial"] {font-size: 1rem !important;}
   .stApp .stMarkdown, .stApp .stMarkdown p {color: var(--v5-hi);}
   [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {color: var(--v5-lo) !important;}
   [data-testid="stAlert"] p {color: var(--v5-hi) !important;}
   [data-testid="stProgress"] p {color: var(--v5-mid) !important;}
+  [data-testid="stExpander"] details {background: var(--v5-raised); border-color: var(--v5-border) !important;}
+  [data-testid="stExpander"] summary, [data-testid="stExpander"] summary p, [data-testid="stExpander"] summary span {color: var(--v5-hi) !important;}
   /* Invisible helpers (style-only blocks, zero-height frames) must not add the row gap each */
   [data-testid="stElementContainer"][height="0px"],
   [data-testid="stElementContainer"]:has([data-testid="stMarkdownContainer"] > style:only-child) {display:none !important;}
@@ -416,7 +418,7 @@ if msg:
     else:
         st.error("The refresh failed — still showing the last build.", icon=":material/error:")
         with st.expander("Build log"):
-            st.code(msg[1] or "(no output)")
+            st.code(msg[1] or "(no output)", language=None)
 
 # ── The page ──
 # Sizes the frame to the page's real height (no inner scroll bar) and drops its viewport-height rules.
