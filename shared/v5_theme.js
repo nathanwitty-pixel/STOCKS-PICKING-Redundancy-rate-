@@ -12,7 +12,7 @@
 (function (root) {
   'use strict';
 
-  var CSS_HREF = 'v5_theme.css';
+  var CSS_HREF = '../assets/v5_theme.css';   // pages live in html/
   var FONT_HREF = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
 
   // ── Colour maths ────────────────────────────────────────────
@@ -398,11 +398,11 @@
       if (busy) return;
       for (var i = 0; i < records.length; i++) {
         var r = records[i];
-        if (r.type === 'attributes') pending.push(r.target);
+        if (r.type === 'attributes') { r.target.__v5attr = true; pending.push(r.target); }
         else for (var j = 0; j < r.addedNodes.length; j++) {
           var n = r.addedNodes[j];
-          if (n.nodeType === 1) pending.push(n);
-          else if (n.parentNode && n.parentNode.nodeName === 'STYLE') pending.push(n.parentNode);
+          if (n.nodeType === 1) { n.__v5add = true; pending.push(n); }
+          else if (n.parentNode && n.parentNode.nodeName === 'STYLE') { n.parentNode.__v5add = true; pending.push(n.parentNode); }
         }
       }
       if (!timer) timer = win.setTimeout(flush, 30);
@@ -413,11 +413,18 @@
       busy = true;
       try {
         var restyle = false, roots = [];
+        // One entry per node (a node can be queued more than once, e.g. transform + margin in one step);
+        // added (childList) wins over a style-only change.
+        var seenN = new Set(); nodes = nodes.filter(function (n) { if (seenN.has(n)) return false; seenN.add(n); return true; });
         nodes.forEach(function (n) {
+          var attr = n.__v5attr && !n.__v5add; n.__v5attr = n.__v5add = false;
           if (!n.isConnected) return;
           if (n.nodeName === 'STYLE' || (n.querySelector && n.querySelector('style:not([data-v5])'))) restyle = true;
           themeInline(n);
-          var r = n.parentNode || n;
+          // A style change touches only that element: check it alone. Its parent can be the whole
+          // page — the page sidebar re-pins itself (style.transform) on every scroll, and scanning
+          // its parent ran getComputedStyle on every element each scroll step (jerky scrolling).
+          var r = attr ? n : (n.parentNode || n);
           if (roots.indexOf(r) < 0) roots.push(r);
         });
         // Chip-text pass once per affected subtree, not once per added node: a table that

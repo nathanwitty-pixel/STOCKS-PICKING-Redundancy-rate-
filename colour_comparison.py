@@ -27,9 +27,13 @@ DASHBOARD = (os.environ.get("DASHBOARD_DIR")
 sys.path.insert(0, DASHBOARD)
 # This PC: the dashboard's .env holds the Odoo login. Load it by path, so it is found even when the build uses the
 # shared/ copies (lib/db.py only looks for a .env above itself). Never overrides variables already set (Cloud secrets).
-if os.path.isfile(os.path.join(_SIBLING, ".env")):
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join(_SIBLING, ".env"))
+# The dashboard now lives on the Desktop (Desktop\Marketing_dashboard); the old sibling folder is still checked first.
+for _env in (os.path.join(_SIBLING, ".env"),
+             os.path.join(os.path.expanduser("~"), "Desktop", "Marketing_dashboard", ".env")):
+    if os.path.isfile(_env):
+        from dotenv import load_dotenv
+        load_dotenv(_env)
+        break
 
 from lib import colours   # noqa: E402  (from the dashboard)
 

@@ -141,10 +141,12 @@ html[data-v5] :focus-visible { outline: 2px solid var(--v5-indigo); outline-offs
 /* ── KPI tiles: a purple → pink light travelling round the border ───────────────
    Two short gradient arcs on a conic gradient whose start angle spins; masked to a 1.5px ring.
    ::after because several pages already use .card::before for the coloured top stripe.
-   Only tiles with a value directly inside (big panels that merely contain KPIs stay plain). */
+   Only tiles with a value directly inside (big panels that merely contain KPIs stay plain), plus the
+   Forward Projections cards (.proj-pair — bags + revenue rates side by side) and the four tiles inside
+   Price per Bag (.pm-stat; the panel around them stays plain). */
 @property --v5-glow-a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, > .v)) { position: relative; }
-html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, > .v))::after {
+html[data-v5] :is(.kpi, .mini, .pm-stat, .card:has(> .card-value, > .k-val, > .kpi-value, > .v, > .proj-pair)) { position: relative; }
+html[data-v5] :is(.kpi, .mini, .pm-stat, .card:has(> .card-value, > .k-val, > .kpi-value, > .v, > .proj-pair))::after {
   content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 1;
   background: conic-gradient(from var(--v5-glow-a), transparent 0deg 30deg, #a855f7 60deg, #ec4899 80deg, transparent 100deg 210deg,
                              #a855f7 240deg, #ec4899 260deg, transparent 280deg);
@@ -154,5 +156,5 @@ html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, 
 }
 @keyframes v5GlowSpin { to { --v5-glow-a: 360deg; } }
 @media (prefers-reduced-motion: reduce) {
-  html[data-v5] :is(.kpi, .mini, .card:has(> .card-value, > .k-val, > .kpi-value, > .v))::after { animation: none; }
+  html[data-v5] :is(.kpi, .mini, .pm-stat, .card:has(> .card-value, > .k-val, > .kpi-value, > .v, > .proj-pair))::after { animation: none; }
 }

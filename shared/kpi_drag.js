@@ -22,7 +22,8 @@
 
   var SORTABLE_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js';
   var ITEM_TOKEN = /(^|-)(card|panel|kpi|kpis|tile|stat|stats|sec|section|block|chart-wrap|charts|offer|grid\d?)$/;
-  var SKIP = '#hsb, .hsb, .sales-popover, .chartsw-menu, template, nav, header, footer';
+  // #ads-panel stays put: it is always the last thing on the page (ads_panel.js).
+  var SKIP = '#hsb, .hsb, .sales-popover, .chartsw-menu, template, nav, header, footer, #ads-panel';
   var NO_DRAG = 'a, button, select, input, textarea, label, summary, canvas, table, [contenteditable], .chartsw-btn, .kpi-reset';
   var TITLE = 'h1, h2, h3, h4, .card-label, .chart-cap, .block-title, .sec-head, .panel-title, .title, summary';
 
@@ -174,6 +175,10 @@
       seen.add(box);
       if (/^(TABLE|THEAD|TBODY|TFOOT|TR|UL|OL|SELECT|svg)$/.test(box.tagName)) return;   // rows / lists aren't layout
       if (box.matches(SKIP) || box.closest(SKIP)) return;
+      // The page column itself (body / the sidebar layout's .psb-main) is not sortable: its items are whole
+      // page sections, and their dividers ("Forward Projections", "Corporate") can't move with them, so a
+      // dragged section left two dividers with nothing between them (22 Oct 2026). A saved order for it is ignored.
+      if (box === document.body || box.classList.contains('psb-main') || box.classList.contains('psb-layout')) return;
       var list = Array.prototype.filter.call(box.children, isItem);
       if (box.__dnd) {                                      // known box: new children → re-mark, re-sort
         list.forEach(function (c) { c.classList.add('dnd-item'); });
